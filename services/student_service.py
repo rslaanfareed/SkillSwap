@@ -401,6 +401,42 @@ ORDER BY s.SKILL_NAME
 
             connection.commit()
 
+            
+
+            cursor.execute("""
+                SELECT
+                    o.USER_ID,
+                    s.SKILL_NAME
+                FROM OFFERS o
+                JOIN SKILLS s
+                    ON o.SKILL_ID = s.SKILL_ID
+                WHERE o.OFFER_ID = :offer_id
+            """, {
+                "offer_id": offer_id
+            })
+
+            offer_owner_id, skill_name = cursor.fetchone()
+
+            cursor.execute("""
+                SELECT NAME
+                FROM USERS
+                WHERE USER_ID = :user_id
+            """, {
+                "user_id": user_id
+            })
+
+            requester_name = cursor.fetchone()[0]
+            
+            self.create_notification(
+                offer_owner_id,
+                user_id,
+                "MATCH",
+                f"{requester_name} requested your {skill_name} skill",
+                "OFFER",
+                offer_id
+            )
+
+
             return True
 
         except Exception as e:
@@ -1416,6 +1452,314 @@ ORDER BY s.SKILL_NAME
             })
 
             return cursor.fetchone()
+
+        finally:
+
+            if cursor:
+                cursor.close()
+
+            if connection:
+                connection.close()
+
+    def create_notification(
+        self,
+        to_user_id,
+        from_user_id,
+        notification_type,
+        content,
+        target_type,
+        target_id
+    ):
+
+        connection = None
+        cursor = None
+
+        try:
+
+            connection = db.get_connection()
+            cursor = connection.cursor()
+
+            cursor.execute("""
+        INSERT INTO NOTIFICATIONS (
+    TO_USER_ID,
+    FROM_USER_ID,
+    NOTIFICATION_TYPE,
+    CONTENT,
+    CREATED_AT,
+    IS_READ,
+    TARGET_TYPE,
+    TARGET_ID
+)
+VALUES (
+    :to_user_id,
+    :from_user_id,
+    :notification_type,
+    :content,
+    SYSDATE,
+    0,
+    :target_type,
+    :target_id
+)
+""", {
+    "to_user_id": to_user_id,
+    "from_user_id": from_user_id,
+    "notification_type": notification_type,
+    "content": content,
+    "target_type": target_type,
+    "target_id": target_id
+})
+
+            connection.commit()
+
+        finally:
+
+            if cursor:
+                cursor.close()
+
+            if connection:
+                connection.close()
+
+    def get_notifications(self, user_id):
+
+        connection = None
+        cursor = None
+
+        try:
+
+            connection = db.get_connection()
+            cursor = connection.cursor()
+
+            cursor.execute("""
+                SELECT
+                    NOTIFICATION_ID,
+                    CONTENT,
+                    TO_CHAR(
+                        CREATED_AT,
+                        'DD-MON HH24:MI'
+                    ),
+                    IS_READ,
+                    TARGET_TYPE,
+                    TARGET_ID
+                FROM NOTIFICATIONS
+                WHERE TO_USER_ID = :user_id
+                ORDER BY CREATED_AT DESC
+            """, {
+                "user_id": user_id
+            })
+
+            return cursor.fetchall()
+
+        finally:
+
+            if cursor:
+                cursor.close()
+
+            if connection:
+                connection.close()
+
+    def mark_notification_read(
+        self,
+        notification_id
+    ):
+
+        connection = None
+        cursor = None
+
+        try:
+
+            connection = db.get_connection()
+            cursor = connection.cursor()
+
+            cursor.execute("""
+                UPDATE NOTIFICATIONS
+                SET IS_READ = 1
+                WHERE NOTIFICATION_ID = :id
+            """, {
+                "id": notification_id
+            })
+
+            connection.commit()
+
+        finally:
+
+            if cursor:
+                cursor.close()
+
+            if connection:
+                connection.close()
+
+
+    def submit_skill_suggestion(
+        self,
+        user_id,
+        skill_name,
+        category_id
+    ):
+
+        connection = None
+        cursor = None
+
+        try:
+
+            connection = db.get_connection()
+            cursor = connection.cursor()
+
+            cursor.execute("""
+                SELECT COUNT(*)
+                FROM SKILLS
+                WHERE UPPER(SKILL_NAME)
+                    = UPPER(:skill_name)
+            """, {
+                "skill_name": skill_name
+            })
+
+            if cursor.fetchone()[0] > 0:
+                return False
+
+            cursor.execute("""
+                INSERT INTO SKILL_SUGGESTIONS
+                (
+                    USER_ID,
+                    SKILL_NAME,
+                    CATEGORY_ID,
+                    STATUS,
+                    SUGGESTED_AT
+                )
+                VALUES
+                (
+                    :user_id,
+                    :skill_name,
+                    :category_id,
+                    'PENDING',
+                    SYSDATE
+                )
+            """, {
+                "user_id": user_id,
+                "skill_name": skill_name,
+                "category_id": category_id
+            })
+
+            connection.commit()
+
+            return True
+
+        except Exception as e:
+
+            print(e)
+            return False
+
+        finally:
+
+            if cursor:
+                cursor.close()
+
+            if connection:
+                connection.close()
+
+    def get_categories(self):
+
+        connection = None
+        cursor = None
+
+        try:
+
+            connection = db.get_connection()
+            cursor = connection.cursor()
+
+            cursor.execute("""
+                SELECT
+                    CATEGORY_ID,
+                    CATEGORY_NAME
+                FROM SKILL_CATEGORIES
+                ORDER BY CATEGORY_NAME
+            """)
+
+            return cursor.fetchall()
+
+        finally:
+
+            if cursor:
+                cursor.close()
+
+            if connection:
+                connection.close()
+
+    def add_availability(
+        self,
+        offer_id,
+        day_of_week,
+        time_slot
+    ):
+
+        connection = None
+        cursor = None
+
+        try:
+
+            connection = db.get_connection()
+            cursor = connection.cursor()
+
+            cursor.execute("""
+                INSERT INTO AVAILABILITY
+                (
+                    OFFER_ID,
+                    DAY_OF_WEEK,
+                    TIME_SLOT
+                )
+                VALUES
+                (
+                    :offer_id,
+                    :day_of_week,
+                    :time_slot
+                )
+            """, {
+                "offer_id": offer_id,
+                "day_of_week": day_of_week,
+                "time_slot": time_slot
+            })
+
+            connection.commit()
+
+            return True
+
+        except Exception as e:
+
+            print(e)
+            return False
+
+        finally:
+
+            if cursor:
+                cursor.close()
+
+            if connection:
+                connection.close()
+
+    def get_availability_for_offer(
+        self,
+        offer_id
+    ):
+
+        connection = None
+        cursor = None
+
+        try:
+
+            connection = db.get_connection()
+            cursor = connection.cursor()
+
+            cursor.execute("""
+                SELECT
+                    DAY_OF_WEEK,
+                    TIME_SLOT
+                FROM AVAILABILITY
+                WHERE OFFER_ID = :offer_id
+                ORDER BY DAY_OF_WEEK
+            """, {
+                "offer_id": offer_id
+            })
+
+            return cursor.fetchall()
 
         finally:
 

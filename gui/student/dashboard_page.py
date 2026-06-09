@@ -103,7 +103,8 @@ class DashboardPage(ctk.CTkFrame):
 
         upcoming_card = ctk.CTkFrame(
             middle_frame,
-            height=220
+            corner_radius=15,
+            border_width=2
         )
 
         upcoming_card.pack(
@@ -157,7 +158,8 @@ class DashboardPage(ctk.CTkFrame):
 
         feedback_card = ctk.CTkFrame(
             middle_frame,
-            height=220
+            corner_radius=15,
+            border_width=2
         )
 
         feedback_card.pack(
@@ -208,7 +210,9 @@ class DashboardPage(ctk.CTkFrame):
             )
 
         skills_card = ctk.CTkFrame(
-            self
+            self,
+            corner_radius=15,
+            border_width=2
         )
 
         skills_card.pack(
@@ -262,7 +266,9 @@ class DashboardPage(ctk.CTkFrame):
         card = ctk.CTkFrame(
             parent,
             width=180,
-            height=120
+            height=120,
+            corner_radius=15,
+            border_width=2
         )
 
         card.pack_propagate(False)

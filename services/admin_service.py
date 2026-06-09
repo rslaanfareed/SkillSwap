@@ -10,6 +10,7 @@ class AdminService:
         cursor = None
 
         try:
+
             connection = db.get_connection()
             cursor = connection.cursor()
 
@@ -25,18 +26,159 @@ class AdminService:
             cursor.execute("SELECT COUNT(*) FROM SKILL_SUGGESTIONS")
             total_suggestions = cursor.fetchone()[0]
 
+            cursor.execute("SELECT COUNT(*) FROM OFFERS")
+            total_offers = cursor.fetchone()[0]
+
+            cursor.execute("SELECT COUNT(*) FROM REQUESTS")
+            total_requests = cursor.fetchone()[0]
+
+            cursor.execute("SELECT COUNT(*) FROM SESSIONS")
+            total_sessions = cursor.fetchone()[0]
+
+            cursor.execute("""
+                SELECT COUNT(*)
+                FROM REQUESTS
+                WHERE STATUS = 'PENDING'
+            """)
+            pending_requests = cursor.fetchone()[0]
+
             return {
                 "users": total_users,
                 "departments": total_departments,
                 "skills": total_skills,
-                "suggestions": total_suggestions
+                "suggestions": total_suggestions,
+                "offers": total_offers,
+                "requests": total_requests,
+                "sessions": total_sessions,
+                "pending_requests": pending_requests
             }
 
         finally:
+
             if cursor:
                 cursor.close()
+
             if connection:
                 connection.close()
+
+
+    def get_most_requested_skill(self):
+
+        connection = None
+        cursor = None
+
+        try:
+
+            connection = db.get_connection()
+            cursor = connection.cursor()
+
+            cursor.execute("""
+                SELECT skill_name
+                FROM (
+                    SELECT
+                        s.SKILL_NAME,
+                        COUNT(*) cnt
+                    FROM REQUESTS r
+                    JOIN SKILLS s
+                        ON r.SKILL_ID = s.SKILL_ID
+                    GROUP BY s.SKILL_NAME
+                    ORDER BY cnt DESC
+                )
+                WHERE ROWNUM = 1
+            """)
+
+            row = cursor.fetchone()
+
+            return row[0] if row else "N/A"
+
+        finally:
+
+            if cursor:
+                cursor.close()
+
+            if connection:
+                connection.close()
+
+
+    def get_most_offered_skill(self):
+
+        connection = None
+        cursor = None
+
+        try:
+
+            connection = db.get_connection()
+            cursor = connection.cursor()
+
+            cursor.execute("""
+                SELECT skill_name
+                FROM (
+                    SELECT
+                        s.SKILL_NAME,
+                        COUNT(*) cnt
+                    FROM OFFERS o
+                    JOIN SKILLS s
+                        ON o.SKILL_ID = s.SKILL_ID
+                    GROUP BY s.SKILL_NAME
+                    ORDER BY cnt DESC
+                )
+                WHERE ROWNUM = 1
+            """)
+
+            row = cursor.fetchone()
+
+            return row[0] if row else "N/A"
+
+        finally:
+
+            if cursor:
+                cursor.close()
+
+            if connection:
+                connection.close()
+
+
+    def get_top_rated_tutor(self):
+
+        connection = None
+        cursor = None
+
+        try:
+
+            connection = db.get_connection()
+            cursor = connection.cursor()
+
+            cursor.execute("""
+                SELECT name
+                FROM (
+                    SELECT
+                        u.NAME,
+                        AVG(f.SCORE) avg_rating
+                    FROM FEEDBACK f
+                    JOIN SESSIONS se
+                        ON f.SESSION_ID = se.SESSION_ID
+                    JOIN OFFERS o
+                        ON se.OFFER_ID = o.OFFER_ID
+                    JOIN USERS u
+                        ON o.USER_ID = u.USER_ID
+                    GROUP BY u.NAME
+                    ORDER BY avg_rating DESC
+                )
+                WHERE ROWNUM = 1
+            """)
+
+            row = cursor.fetchone()
+
+            return row[0] if row else "N/A"
+
+        finally:
+
+            if cursor:
+                cursor.close()
+
+            if connection:
+                connection.close()
+
 
     def get_all_users(self):
 

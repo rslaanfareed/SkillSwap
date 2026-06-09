@@ -1,9 +1,9 @@
 import customtkinter as ctk
 from tkinter import ttk, messagebox
-
+from gui.student.availability_dialog import AvailabilityDialog
 from services.student_service import student_service
 from gui.student.offer_dialog import OfferDialog
-
+from gui.student.view_availability_dialog import ViewAvailabilityDialog
 
 class OffersPage(ctk.CTkFrame):
 
@@ -102,6 +102,27 @@ class OffersPage(ctk.CTkFrame):
             side="left",
             padx=5
         )
+
+
+        ctk.CTkButton(
+            button_frame,
+            text="Add Availability",
+            command=self.add_availability
+        ).pack(
+            side="left",
+            padx=5
+        )
+
+
+        ctk.CTkButton(
+            button_frame,
+            text="View Availability",
+            command=self.view_availability
+        ).pack(
+            side="left",
+            padx=5
+        )
+
 
         ctk.CTkButton(
             button_frame,
@@ -384,3 +405,71 @@ class OffersPage(ctk.CTkFrame):
                 "Error",
                 "Failed to delete offer."
             )
+
+    def add_availability(self):
+
+        if self.selected_offer_id is None:
+
+            messagebox.showwarning(
+                "Select Offer",
+                "Please select an offer first."
+            )
+
+            return
+
+        dialog = AvailabilityDialog(
+            self
+        )
+
+        self.wait_window(dialog)
+
+        if dialog.result is None:
+            return
+
+        day, slot = dialog.result
+
+        success = (
+            student_service.add_availability(
+                self.selected_offer_id,
+                day,
+                slot
+            )
+        )
+
+        if success:
+
+            messagebox.showinfo(
+                "Success",
+                "Availability added."
+            )
+
+        else:
+
+            messagebox.showerror(
+                "Error",
+                "Failed to add availability."
+            )
+
+    def view_availability(self):
+
+        if self.selected_offer_id is None:
+
+            messagebox.showwarning(
+                "Select Offer",
+                "Please select an offer first."
+            )
+
+            return
+
+        availability = (
+            student_service.get_availability_for_offer(
+                self.selected_offer_id
+            )
+        )
+
+        dialog = ViewAvailabilityDialog(
+            self,
+            availability
+        )
+
+        self.wait_window(dialog)

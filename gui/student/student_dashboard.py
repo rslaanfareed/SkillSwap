@@ -4,6 +4,7 @@ from gui.student.browse_skills_page import BrowseSkillsPage
 from gui.student.offers_page import OffersPage
 from gui.student.my_requests_page import MyRequestsPage
 from gui.student.incoming_requests_page import IncomingRequestsPage
+from gui.student.notifications_page import NotificationsPage
 
 class StudentDashboard(ctk.CTkFrame):
 
@@ -116,6 +117,17 @@ class StudentDashboard(ctk.CTkFrame):
             self.sidebar,
             text="My Sessions",
             command=self.show_sessions,
+            height=40
+        ).pack(
+            fill="x",
+            padx=15,
+            pady=5
+        )
+
+        ctk.CTkButton(
+            self.sidebar,
+            text="Notifications",
+            command=self.show_notifications,
             height=40
         ).pack(
             fill="x",
@@ -249,6 +261,24 @@ class StudentDashboard(ctk.CTkFrame):
         )
         self.add_theme_button()
 
+
+    def show_notifications(self):
+
+        self.clear_content()
+
+        page = NotificationsPage(
+            self.content,
+            self.user
+        )
+
+        page.pack(
+            fill="both",
+            expand=True
+        )
+
+        self.add_theme_button()
+
+
     def show_sessions(self):
 
         self.clear_content()
@@ -264,3 +294,5 @@ class StudentDashboard(ctk.CTkFrame):
         )
 
         self.add_theme_button()
+
+   

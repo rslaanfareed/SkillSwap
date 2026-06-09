@@ -1,6 +1,6 @@
 import customtkinter as ctk
 from tkinter import ttk, messagebox
-
+from gui.student.suggest_skill_dialog import SuggestSkillDialog
 from services.student_service import student_service
 from gui.student.request_dialog import RequestDialog
 
@@ -87,6 +87,16 @@ class BrowseSkillsPage(ctk.CTkFrame):
             side="left",
             padx=5
         )
+
+        ctk.CTkButton(
+            button_frame,
+            text="Suggest New Skill",
+            command=self.suggest_skill
+        ).pack(
+            side="left",
+            padx=5
+        )
+
 
         table_frame = ctk.CTkFrame(self)
 
@@ -188,6 +198,17 @@ class BrowseSkillsPage(ctk.CTkFrame):
 
         self.refresh_table()
 
+        ctk.CTkLabel(
+            self,
+            text="Can't find a skill? Suggest it to the admins.",
+            font=ctk.CTkFont(
+                size=14
+            )
+        ).pack(
+            pady=(0, 10)
+        )
+
+
     def refresh_table(self):
 
         if self.tree is None:
@@ -209,6 +230,16 @@ class BrowseSkillsPage(ctk.CTkFrame):
                 "end",
                 values=offer
             )
+
+
+    def suggest_skill(self):
+
+        dialog = SuggestSkillDialog(
+            self,
+            self.user
+        )
+
+        self.wait_window(dialog)
 
     def on_offer_selected(self, event):
 

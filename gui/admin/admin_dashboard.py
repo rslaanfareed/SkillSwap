@@ -107,6 +107,7 @@ class AdminDashboard(ctk.CTkFrame):
             self.sidebar,
             text="Logout",
             fg_color="red",
+            hover_color="#cc0000",
             command=self.on_logout,
             height=40
         ).pack(
@@ -153,94 +154,159 @@ class AdminDashboard(ctk.CTkFrame):
 
         stats = admin_service.get_dashboard_stats()
 
+        most_requested = (
+            admin_service.get_most_requested_skill()
+        )
+
+        most_offered = (
+            admin_service.get_most_offered_skill()
+        )
+
+        top_tutor = (
+            admin_service.get_top_rated_tutor()
+        )
+
         ctk.CTkLabel(
             self.content,
             text="Admin Dashboard",
             font=ctk.CTkFont(
-                size=34,
+                size=36,
                 weight="bold"
             )
         ).pack(
-            pady=25
+            pady=(20, 5)
         )
 
-        cards_frame = ctk.CTkFrame(
+        ctk.CTkLabel(
+            self.content,
+            text="SkillSwap Analytics & Management",
+            font=ctk.CTkFont(
+                size=18
+            )
+        ).pack(
+            pady=(0, 20)
+        )
+
+        stats_frame = ctk.CTkFrame(
             self.content,
             fg_color="transparent"
         )
 
-        cards_frame.pack(
-            pady=30
+        stats_frame.pack(
+            fill="x",
+            padx=20,
+            pady=10
         )
 
-        self.create_card(
-            cards_frame,
-            "Users",
-            stats["users"],
-            0
-        )
+        cards = [
+            ("Users", stats["users"]),
+            ("Departments", stats["departments"]),
+            ("Skills", stats["skills"]),
+            ("Suggestions", stats["suggestions"]),
+            ("Offers", stats["offers"]),
+            ("Requests", stats["requests"]),
+            ("Sessions", stats["sessions"]),
+            ("Pending", stats["pending_requests"])
+        ]
 
-        self.create_card(
-            cards_frame,
-            "Departments",
-            stats["departments"],
-            1
-        )
+        for i, (title, value) in enumerate(cards):
 
-        self.create_card(
-            cards_frame,
-            "Skills",
-            stats["skills"],
-            2
-        )
-
-        self.create_card(
-            cards_frame,
-            "Suggestions",
-            stats["suggestions"],
-            3
-        )
-
-    def create_card(
-        self,
-        parent,
-        title,
-        value,
-        column
-    ):
-
-        card = ctk.CTkFrame(
-            parent,
-            width=220,
-            height=140
-        )
-
-        card.grid(
-            row=0,
-            column=column,
-            padx=20
-        )
-
-        card.grid_propagate(False)
-
-        ctk.CTkLabel(
-            card,
-            text=title,
-            font=ctk.CTkFont(
-                size=20
+            card = ctk.CTkFrame(
+                stats_frame,
+                corner_radius=15,
+                border_width=2
             )
-        ).pack(
-            pady=(25, 10)
+
+            card.grid(
+                row=i // 4,
+                column=i % 4,
+                padx=12,
+                pady=12,
+                sticky="nsew"
+            )
+
+            ctk.CTkLabel(
+                card,
+                text=title,
+                font=ctk.CTkFont(
+                    size=18
+                )
+            ).pack(
+                pady=(20, 8)
+            )
+
+            ctk.CTkLabel(
+                card,
+                text=str(value),
+                font=ctk.CTkFont(
+                    size=34,
+                    weight="bold"
+                )
+            ).pack(
+                pady=(0, 20)
+            )
+
+        for col in range(4):
+            stats_frame.grid_columnconfigure(
+                col,
+                weight=1,
+                minsize=220
+            )
+
+
+
+
+        analytics_frame = ctk.CTkFrame(
+            self.content,
+            corner_radius=15,
+            border_width=2
+        )
+
+        analytics_frame.pack(
+            fill="x",
+            padx=25,
+            pady=20
         )
 
         ctk.CTkLabel(
-            card,
-            text=str(value),
+            analytics_frame,
+            text="Platform Insights",
             font=ctk.CTkFont(
-                size=36,
+                size=24,
                 weight="bold"
             )
-        ).pack()
+        ).pack(
+            pady=(15, 20)
+        )
+
+        insights = [
+    f"🔥 Most Requested Skill: {most_requested}",
+    f"📚 Most Offered Skill: {most_offered}",
+    f"⭐ Top Rated Tutor: {top_tutor}",
+    f"📈 Total Offers: {stats['offers']}",
+    f"📝 Total Requests: {stats['requests']}",
+    f"📅 Total Sessions: {stats['sessions']}",
+    
+]
+
+        for item in insights:
+
+            ctk.CTkLabel(
+                analytics_frame,
+                text=item,
+                anchor="w",
+                font=ctk.CTkFont(
+                    size=16
+                )
+            ).pack(
+                anchor="w",
+                padx=25,
+                pady=6
+            )
+
+    
+
+   
 
     def show_users(self):
 
