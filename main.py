@@ -1,5 +1,5 @@
 import customtkinter as ctk
-
+from gui.auth.register_page import RegisterPage
 from gui.auth.login_page import LoginPage
 from gui.admin.admin_dashboard import AdminDashboard
 from gui.student.student_dashboard import StudentDashboard
@@ -51,7 +51,12 @@ class SkillSwapApp(ctk.CTk):
 
     def show_register(self):
 
-        print("Register page coming soon")
+        self.clear_page()
+
+        self.current_page = RegisterPage(
+            self,
+            self.show_login
+        )
 
     def handle_login(self, user):
 

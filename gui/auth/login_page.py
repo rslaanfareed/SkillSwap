@@ -70,16 +70,16 @@ class LoginPage(ctk.CTkFrame):
         )
         login_btn.pack(pady=(25, 10))
 
-        # register_btn = ctk.CTkButton(
-        #     container,
-        #     text="Create Account",
-        #     width=420,
-        #     height=45,
-        #     fg_color="transparent",
-        #     border_width=2,
-        #     command=self.on_show_register
-        # )
-        # register_btn.pack()
+        register_btn = ctk.CTkButton(
+            container,
+            text="Create Account",
+            width=420,
+            height=45,
+            fg_color="transparent",
+            border_width=2,
+            command=self.on_show_register
+        )
+        register_btn.pack()
 
         self.password_entry.bind(
             "<Return>",

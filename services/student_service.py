@@ -77,6 +77,7 @@ class StudentService:
             except:
                 pass
 
+    
     def add_offer(
         self,
         user_id,
@@ -117,16 +118,26 @@ class StudentService:
                 "p_session_mode": mode
             })
 
+            cursor.execute("""
+                SELECT MAX(OFFER_ID)
+                FROM OFFERS
+                WHERE USER_ID = :p_user_id
+            """, {
+                "p_user_id": user_id
+            })
+
+            offer_id = cursor.fetchone()[0]
+
             connection.commit()
 
-            return True
+            return offer_id
 
         except Exception as e:
 
             print("\nADD OFFER ERROR:")
             print(e)
 
-            return False
+            return None
 
         finally:
 
@@ -141,61 +152,60 @@ class StudentService:
                     connection.close()
             except:
                 pass
-
     def update_offer(
-        self,
-        offer_id,
-        skill_id,
-        level,
-        mode
-    ):
+            self,
+            offer_id,
+            skill_id,
+            level,
+            mode
+        ):
 
-        connection = None
-        cursor = None
-
-        try:
-
-            connection = db.get_connection()
-            cursor = connection.cursor()
-
-            cursor.execute("""
-                UPDATE OFFERS
-                SET
-                    SKILL_ID = :p_skill_id,
-                    SKILL_LEVEL = :p_skill_level,
-                    SESSION_MODE = :p_session_mode
-                WHERE OFFER_ID = :p_offer_id
-            """, {
-                "p_skill_id": skill_id,
-                "p_skill_level": level,
-                "p_session_mode": mode,
-                "p_offer_id": offer_id
-            })
-
-            connection.commit()
-
-            return True
-
-        except Exception as e:
-
-            print("\nUPDATE OFFER ERROR:")
-            print(e)
-
-            return False
-
-        finally:
+            connection = None
+            cursor = None
 
             try:
-                if cursor:
-                    cursor.close()
-            except:
-                pass
 
-            try:
-                if connection:
-                    connection.close()
-            except:
-                pass
+                connection = db.get_connection()
+                cursor = connection.cursor()
+
+                cursor.execute("""
+                    UPDATE OFFERS
+                    SET
+                        SKILL_ID = :p_skill_id,
+                        SKILL_LEVEL = :p_skill_level,
+                        SESSION_MODE = :p_session_mode
+                    WHERE OFFER_ID = :p_offer_id
+                """, {
+                    "p_skill_id": skill_id,
+                    "p_skill_level": level,
+                    "p_session_mode": mode,
+                    "p_offer_id": offer_id
+                })
+
+                connection.commit()
+
+                return True
+
+            except Exception as e:
+
+                print("\nUPDATE OFFER ERROR:")
+                print(e)
+
+                return False
+
+            finally:
+
+                try:
+                    if cursor:
+                        cursor.close()
+                except:
+                    pass
+
+                try:
+                    if connection:
+                        connection.close()
+                except:
+                    pass
 
     def delete_offer(self, offer_id):
 
@@ -759,6 +769,7 @@ ORDER BY s.SKILL_NAME
         self,
         offer_id,
         request_id,
+        availability_id,
         session_date,
         meeting_detail
     ):
@@ -777,6 +788,7 @@ ORDER BY s.SKILL_NAME
 
                     OFFER_ID,
                     REQUEST_ID,
+                    AVAILABILITY_ID,
                     SESSION_DATE,
                     MEETING_DETAIL,
                     STATUS,
@@ -788,6 +800,7 @@ ORDER BY s.SKILL_NAME
 
                     :offer_id,
                     :request_id,
+                    :availability_id,
                     TO_DATE(
                         :session_date,
                         'YYYY-MM-DD'
@@ -800,6 +813,8 @@ ORDER BY s.SKILL_NAME
             """, {
                 "offer_id": offer_id,
                 "request_id": request_id,
+                "availability_id": availability_id,
+
                 "session_date": session_date,
                 "meeting_detail": meeting_detail
             })
@@ -869,7 +884,12 @@ ORDER BY s.SKILL_NAME
                     ) = u.USER_ID
                 WHERE o.USER_ID = :user_id
                 OR r.USER_ID = :user_id
-                ORDER BY se.SESSION_DATE DESC
+                ORDER BY
+                CASE
+                    WHEN se.STATUS = 'SCHEDULED' THEN 0
+                    ELSE 1
+                END,
+                se.SESSION_DATE ASC
             """, {
                 "user_id": user_id
             })
@@ -1760,6 +1780,78 @@ VALUES (
             })
 
             return cursor.fetchall()
+
+        finally:
+
+            if cursor:
+                cursor.close()
+
+            if connection:
+                connection.close()
+
+    def get_request_availability_id(
+        self,
+        request_id
+    ):
+
+        connection = None
+        cursor = None
+
+        try:
+
+            connection = db.get_connection()
+            cursor = connection.cursor()
+
+            cursor.execute("""
+                SELECT SELECTED_AVAILABILITY_ID
+                FROM REQUESTS
+                WHERE REQUEST_ID = :request_id
+            """, {
+                "request_id": request_id
+            })
+
+            row = cursor.fetchone()
+
+            if row:
+                return row[0]
+
+            return None
+
+        finally:
+
+            if cursor:
+                cursor.close()
+
+            if connection:
+                connection.close()
+
+    def get_availability_day(
+        self,
+        availability_id
+    ):
+
+        connection = None
+        cursor = None
+
+        try:
+
+            connection = db.get_connection()
+            cursor = connection.cursor()
+
+            cursor.execute("""
+                SELECT DAY_OF_WEEK
+                FROM AVAILABILITY
+                WHERE AVAILABILITY_ID = :availability_id
+            """, {
+                "availability_id": availability_id
+            })
+
+            row = cursor.fetchone()
+
+            if row:
+                return row[0]
+
+            return None
 
         finally:
 

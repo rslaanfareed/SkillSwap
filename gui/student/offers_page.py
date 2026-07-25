@@ -4,6 +4,7 @@ from gui.student.availability_dialog import AvailabilityDialog
 from services.student_service import student_service
 from gui.student.offer_dialog import OfferDialog
 from gui.student.view_availability_dialog import ViewAvailabilityDialog
+from gui.student.availability_dialog import AvailabilityDialog
 
 class OffersPage(ctk.CTkFrame):
 
@@ -291,11 +292,53 @@ class OffersPage(ctk.CTkFrame):
 
         skill_id, level, mode = dialog.result
 
-        success = student_service.add_offer(
+        offer_id = student_service.add_offer(
             self.user["user_id"],
             skill_id,
             level,
             mode
+        )
+
+        if offer_id is None:
+
+            messagebox.showerror(
+                "Error",
+                "Failed to add offer."
+            )
+
+            return
+
+        availability_dialog = AvailabilityDialog(
+            self
+        )
+
+        self.wait_window(
+            availability_dialog
+        )
+
+        if availability_dialog.result is None:
+
+            messagebox.showwarning(
+                "Availability Required",
+                "Offer must have availability."
+            )
+
+            student_service.delete_offer(
+                offer_id
+            )
+
+            return
+
+        day, slot = (
+            availability_dialog.result
+        )
+
+        success = (
+            student_service.add_availability(
+                offer_id,
+                day,
+                slot
+            )
         )
 
         if success:
@@ -309,9 +352,13 @@ class OffersPage(ctk.CTkFrame):
 
         else:
 
+            student_service.delete_offer(
+                offer_id
+            )
+
             messagebox.showerror(
                 "Error",
-                "Failed to add offer."
+                "Failed to save availability."
             )
 
     def edit_offer(self):

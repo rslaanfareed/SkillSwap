@@ -1,7 +1,7 @@
 from gui.student.session_dialog import SessionDialog
 import customtkinter as ctk
 from tkinter import ttk, messagebox
-
+from datetime import datetime
 from services.student_service import student_service
 
 
@@ -347,10 +347,43 @@ class IncomingRequestsPage(ctk.CTkFrame):
         offer_id = self.get_offer_id_from_request(
             request_id
         )
+        availability_id = (
+            student_service.get_request_availability_id(
+                request_id
+            )
+        )
+
+
+        selected_day = (
+            student_service.get_availability_day(
+                availability_id
+            )
+        )
+
+        actual_day = (
+            datetime.strptime(
+                session_date,
+                "%Y-%m-%d"
+            )
+            .strftime("%A")
+            .upper()
+        )
+
+        if selected_day != actual_day:
+
+            messagebox.showerror(
+                "Invalid Date",
+                f"This availability is for {selected_day}. "
+                f"Please select a {selected_day} date."
+            )
+
+            return
+
 
         success = student_service.create_session(
             offer_id,
             request_id,
+            availability_id,
             session_date,
             meeting_detail
         )

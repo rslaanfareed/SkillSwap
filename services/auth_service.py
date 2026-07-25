@@ -283,5 +283,34 @@ class AuthService:
             except:
                 pass
 
+    def email_exists(self, email):
+
+        connection = None
+        cursor = None
+
+        try:
+
+            connection = db.get_connection()
+            cursor = connection.cursor()
+
+            cursor.execute("""
+                SELECT COUNT(*)
+                FROM USERS
+                WHERE LOWER(EMAIL) = LOWER(:email)
+            """, {
+                "email": email
+            })
+
+            count = cursor.fetchone()[0]
+
+            return count > 0
+
+        finally:
+
+            if cursor:
+                cursor.close()
+
+            if connection:
+                connection.close()
 
 auth_service = AuthService()
